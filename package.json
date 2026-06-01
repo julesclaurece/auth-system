@@ -17,6 +17,7 @@
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.13",
     "pg": "^8.11.5",
+    "resend": "^6.12.4",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
