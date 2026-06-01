@@ -97,7 +97,7 @@ const login = async (req, res) => {
   res.json({
     accessToken,
     refreshToken,
-    user: { id: user.id, name: user.name, email: user.email, role: user.role },
+    user: { id: user.id, name: user.name, email: user.email, role: user.role, created_at: user.created_at },
   });
 };
 
