@@ -20,27 +20,32 @@ const register = async (req, res) => {
     return res.status(409).json({ message: 'Email already in use.' });
 
   const hashed = await bcrypt.hash(password, 12);
-  const verificationToken = uuidv4();
+  const isDemo = process.env.DEMO_MODE === 'true';
+  const verificationToken = isDemo ? null : uuidv4();
 
   const { rows } = await pool.query(
-    `INSERT INTO users (name, email, password, verification_token)
-     VALUES ($1, $2, $3, $4) RETURNING id, name, email, role`,
-    [name, email, hashed, verificationToken]
+    `INSERT INTO users (name, email, password, verification_token, is_verified)
+     VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, role`,
+    [name, email, hashed, verificationToken, isDemo]
   );
 
-  const verifyUrl = `${process.env.APP_URL}/api/auth/verify-email/${verificationToken}`;
-  try {
-    await sendEmail({
-      to: email,
-      subject: 'Verify your email',
-      html: verificationEmail(name, verifyUrl),
-    });
-  } catch (err) {
-    console.error('Verification email failed:', err.message);
+  if (!isDemo) {
+    const verifyUrl = `${process.env.APP_URL}/api/auth/verify-email/${verificationToken}`;
+    try {
+      await sendEmail({
+        to: email,
+        subject: 'Verify your email',
+        html: verificationEmail(name, verifyUrl),
+      });
+    } catch (err) {
+      console.error('Verification email failed:', err.message);
+    }
   }
 
   res.status(201).json({
-    message: 'Registration successful. Please check your email to verify your account.',
+    message: isDemo
+      ? 'Registration successful. You can log in immediately.'
+      : 'Registration successful. Please check your email to verify your account.',
     user: rows[0],
   });
 };
@@ -56,9 +61,9 @@ const verifyEmail = async (req, res) => {
   );
 
   if (rows.length === 0)
-    return res.status(400).json({ message: 'Invalid or expired verification token.' });
+    return res.redirect(`${process.env.FRONTEND_URL}/email-verified?success=false`);
 
-  res.json({ message: 'Email verified successfully. You can now log in.' });
+  res.redirect(`${process.env.FRONTEND_URL}/email-verified?success=true`);
 };
 
 // POST /api/auth/login

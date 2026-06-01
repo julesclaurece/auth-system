@@ -27,7 +27,7 @@ const forgotPassword = async (req, res) => {
     [resetToken, expires, user.id]
   );
 
-  const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
   try {
     await sendEmail({
       to: email,
